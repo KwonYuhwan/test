@@ -37,11 +37,15 @@
       height: auto;
       transition: 0.2s;
     }
-    button {
+    button, input[type="text"] {
       margin-top: 2rem;
       font-size: 1.1rem;
-      padding: 1rem 2rem;
-      cursor: pointer;
+      padding: 1rem;
+      width: 80%;
+      max-width: 400px;
+    }
+    input[type="text"] {
+      margin-bottom: 1rem;
     }
     @media (max-width: 600px) {
       body {
@@ -50,9 +54,9 @@
       .bubble {
         font-size: 0.95rem;
       }
-      button {
+      button, input[type="text"] {
         font-size: 1rem;
-        padding: 0.75rem 1.5rem;
+        padding: 0.75rem;
       }
     }
   </style>
@@ -64,7 +68,10 @@
     <img id="face" src="mouth_closed.png" alt="회장님 캐릭터">
   </div>
   <br>
-  <button onclick="startListening()">🎤 질문하기</button>
+  <input type="text" id="textInput" placeholder="채팅으로 질문해보세요">
+  <br>
+  <button onclick="handleTextInput()">💬 질문하기</button>
+  <button onclick="startListening()">🎤 음성으로 질문하기</button>
 
   <script>
     const qaMap = {
@@ -75,6 +82,7 @@
 
     const bubble = document.getElementById("bubble");
     const face = document.getElementById("face");
+    const textInput = document.getElementById("textInput");
     const closedMouth = "mouth_closed.png";
     const openMouth = "mouth_open.png";
     let speakingInterval = null;
@@ -117,6 +125,14 @@
       window.speechSynthesis.speak(utter);
     }
 
+    function handleTextInput() {
+      const input = textInput.value.trim();
+      if (!input) return;
+      const answer = getAnswer(input);
+      speak(answer);
+      textInput.value = "";
+    }
+
     function startListening() {
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.lang = "ko-KR";
@@ -148,7 +164,6 @@
       };
     }
 
-    // 음성 목록 로딩 후 남성 음성 설정
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = window.speechSynthesis.getVoices();
       const maleVoiceCandidates = voices.filter(v =>
