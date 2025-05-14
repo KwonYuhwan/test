@@ -84,12 +84,8 @@
 
   <script>
     const qaMap = {
-      "김지윤": "김지윤 매니저님은, SK스토아 마케팅팀의 엘사입니다. ",    
-      "안녕": "안녕하세요! 행복하신가요? ", 
-      "아니": "유감입니다. ",      
-      "응": "저도 좋아요. ",      
-      "정은비": "정은비 매니저님은, 진주 출신으로 대쪽같은 성격의 소유자입니다. 일명 밤부걸이라고 불리고 있어요.",    
-      "권도원": "냠냠..꿀꿀꿀꿀..",
+      "조미화": "조미화 매니저님은 1991년생 양띠로, 전 워크샵 준비위원회 위원이었고 현재는 포상준비위원회에서 활약 중이에요. 아버님은 나무를 가꾸시고, 아기 등원을 위하여 회사 근처로 이사오신 분이에요.",
+      "백승효": "백승효 팀장님은 양띠로, 모바일제휴영업팀의 수장이자 대형 커피 프랜차이즈의 사모님으로도 알려져 있어요. 정치색은 밝히지 않지만, 사적인 이야기에는 꽤 솔직하게 말씀하시는 스타일이에요.",
       "스토아": "스토아는 SK그룹 계열의 T커머스 전문 기업으로, TV뿐 아니라 모바일과 온라인 플랫폼에서 쇼핑 서비스를 제공하는 종합 미디어커머스 회사예요. 2017년에 설립되어 2018년부터 방송을 시작했고, 다양한 채널과 앱을 통해 서비스하며 수평적이고 자율적인 문화를 가지고 있어요. 복지도 우수하고, 다양한 팀이 협력해 운영되고 있으며, 고객 중심과 지속 가능한 가치를 핵심 철학으로 삼고 있어요."
     };
 
@@ -121,7 +117,7 @@
           return qaMap[key];
         }
       }
-      return "죄송합니다. 민감한 질문은 노코멘트 하겠습니다.";
+      return "죄송합니다. 그 질문은 잘 모르겠습니다.";
     }
 
     function speak(text) {
@@ -138,13 +134,37 @@
       window.speechSynthesis.speak(utter);
     }
 
-    function handleTextInput() {
-      const input = textInput.value.trim();
-      if (!input) return;
-      const answer = getAnswer(input);
-      speak(answer);
-      textInput.value = "";
+    async function handleTextInput() {
+  const input = textInput.value.trim();
+  if (!input) return;
+
+  bubble.innerText = "생각 중이에요... 🤔";
+
+  let answer = getAnswer(input);
+  if (answer === "죄송합니다. 그 질문은 잘 모르겠습니다.") {
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer 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"
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: input }],
+          temperature: 0.7
+        })
+      });
+      const data = await response.json();
+      answer = data.choices?.[0]?.message?.content?.trim() || "답변을 생성하는 데 문제가 발생했어요.";
+    } catch (err) {
+      answer = "GPT 응답 중 오류가 발생했어요.";
     }
+  }
+
+  speak(answer);
+  textInput.value = "";
+}
 
     function startListening() {
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
