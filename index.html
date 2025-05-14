@@ -112,6 +112,7 @@
 
         if (!response.ok) {
           console.error("❌ 응답 오류:", response.status, data);
+          alert("Groq 오류: " + (data?.error?.message || "상세 메시지 없음"));
           return `GPT 요청 실패 (상태 코드: ${response.status})`;
         }
 
