@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>최태원 회장님 음성 챗봇</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Groq AI 챗봇</title>
   <style>
     html, body {
       margin: 0;
@@ -40,12 +40,12 @@
   </style>
 </head>
 <body>
-  <h1>최태원 회장님 음성 챗봇</h1>
+  <h1>Groq AI 챗봇</h1>
   <div class="character">
-    <img id="face" src="mouth_closed.png" alt="회장님 캐릭터">
+    <img id="face" src="mouth_closed.png" alt="캐릭터 이미지">
   </div>
   <div class="bubble" id="bubble">무엇이든 질문해보세요!</div>
-  <input type="text" id="textInput" placeholder="채팅으로 질문해보세요">
+  <input type="text" id="textInput" placeholder="채팅으로 질문해보세요" />
   <button onclick="handleTextInput()">💬 질문하기</button>
   <button onclick="startListening()">🎤 음성으로 질문하기</button>
 
@@ -92,17 +92,21 @@
           body: JSON.stringify({
             model: "mixtral-8x7b-32768",
             messages: [{ role: "user", content: prompt }],
-            temperature: 0.7
+            temperature: 0.7,
+            top_p: 1,
+            stream: false
           })
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          console.error("❌ 요청 실패", response.status, response.statusText);
+          console.error("❌ 응답 오류:", response.status, data);
           return `GPT 요청 실패 (상태 코드: ${response.status})`;
         }
 
-        const data = await response.json();
         return data.choices?.[0]?.message?.content?.trim() || "AI 응답 생성 실패";
+
       } catch (err) {
         console.error("🚨 네트워크 오류:", err);
         return "Groq API 호출 중 오류가 발생했어요.";
@@ -153,7 +157,8 @@
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = window.speechSynthesis.getVoices();
       const maleVoice = voices.find(v =>
-        v.lang === "ko-KR" && (v.name.includes("Google 한국의 남성") || v.name.toLowerCase().includes("male"))
+        v.lang === "ko-KR" &&
+        (v.name.includes("Google 한국의 남성") || v.name.toLowerCase().includes("male"))
       );
       preferredVoice = maleVoice || voices.find(v => v.lang === "ko-KR");
     };
