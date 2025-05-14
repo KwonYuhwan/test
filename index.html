@@ -5,44 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>최태원 회장님 챗봇</title>
   <style>
-    body {
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
       font-family: sans-serif;
       text-align: center;
       background: #f2f2f2;
-      padding: 3rem;
-      margin: 0;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
     .character {
-      position: relative;
-      display: inline-block;
       max-width: 90vw;
+      flex-shrink: 0;
     }
-    $1top: -2.5rem;
-      bottom: 100%;
-      margin-bottom: 1rem;$2}
     .character img {
       width: 100%;
       height: auto;
-      max-width: 100%;
+      max-height: 40vh;
       object-fit: contain;
       display: block;
       margin: 0 auto;
     }
-    button, input[type="text"] {
-      margin-top: 2rem;
-      font-size: 1.1rem;
-      padding: 1rem;
-      width: 80%;
-      max-width: 400px;
-    }
-    input[type="text"] {
-      margin-bottom: 1rem;
-    }
-    @media (max-width: 600px) {
-      body {
-        padding: 1.5rem;
-      }
-      .bubble {
+    .bubble {
       position: relative;
       background: white;
       padding: 1rem 1.5rem;
@@ -53,12 +43,24 @@
       max-width: 320px;
       font-size: 1rem;
       box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
-      margin-left: auto;
-      margin-right: auto;
     }
+    button, input[type="text"] {
+      margin-top: 1rem;
+      font-size: 1rem;
+      padding: 0.8rem;
+      width: 80%;
+      max-width: 400px;
+    }
+    input[type="text"] {
+      margin-bottom: 0.5rem;
+    }
+    @media (max-width: 600px) {
+      .bubble {
+        font-size: 0.95rem;
+      }
       button, input[type="text"] {
-        font-size: 1rem;
-        padding: 0.75rem;
+        font-size: 0.95rem;
+        padding: 0.6rem;
       }
     }
   </style>
