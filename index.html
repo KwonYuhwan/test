@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>최태원 회장님 챗봇</title>
   <style>
     body {
@@ -9,10 +10,12 @@
       text-align: center;
       background: #f2f2f2;
       padding: 3rem;
+      margin: 0;
     }
     .character {
       position: relative;
       display: inline-block;
+      max-width: 90vw;
     }
     .bubble {
       position: absolute;
@@ -23,20 +26,34 @@
       padding: 1rem 1.5rem;
       border-radius: 20px;
       border: 2px solid #888;
-      width: 300px;
-      font-size: 1.1rem;
+      width: 80vw;
+      max-width: 320px;
+      font-size: 1rem;
       box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
     }
     .character img {
-      width: 250px;
+      width: 70vw;
+      max-width: 250px;
       height: auto;
       transition: 0.2s;
     }
     button {
       margin-top: 2rem;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       padding: 1rem 2rem;
       cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      body {
+        padding: 1.5rem;
+      }
+      .bubble {
+        font-size: 0.95rem;
+      }
+      button {
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+      }
     }
   </style>
 </head>
@@ -53,7 +70,7 @@
     const qaMap = {
       "조미화": "조미화 매니저님은 1991년생 양띠로, 전 워크샵 준비위원회 위원이었고 현재는 포상준비위원회에서 활약 중이에요. 아버님은 나무를 가꾸시고, 아기 등원을 위하여 회사 근처로 이사오신 분이에요.",
       "백승효": "백승효 팀장님은 양띠로, 모바일제휴영업팀의 수장이자 대형 커피 프랜차이즈의 사모님으로도 알려져 있어요. 정치색은 밝히지 않지만, 사적인 이야기에는 꽤 솔직하게 말씀하시는 스타일이에요.",
-      "스토아": "SK스토아는 SK그룹 계열의 T커머스 전문 기업으로, TV뿐 아니라 모바일과 온라인 플랫폼에서 쇼핑 서비스를 제공하는 종합 미디어커머스 회사예요. 2017년에 설립되어 2018년부터 방송을 시작했고, 다양한 채널과 앱을 통해 서비스하며 수평적이고 자율적인 문화를 가지고 있어요. 복지도 우수하고, 다양한 팀이 협력해 운영되고 있으며, 고객 중심과 지속 가능한 가치를 핵심 철학으로 삼고 있어요."
+      "스토아": "스토아는 SK그룹 계열의 T커머스 전문 기업으로, TV뿐 아니라 모바일과 온라인 플랫폼에서 쇼핑 서비스를 제공하는 종합 미디어커머스 회사예요. 2017년에 설립되어 2018년부터 방송을 시작했고, 다양한 채널과 앱을 통해 서비스하며 수평적이고 자율적인 문화를 가지고 있어요. 복지도 우수하고, 다양한 팀이 협력해 운영되고 있으며, 고객 중심과 지속 가능한 가치를 핵심 철학으로 삼고 있어요."
     };
 
     const bubble = document.getElementById("bubble");
@@ -91,9 +108,9 @@
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = "ko-KR";
 
-      const voices = window.speechSynthesis.getVoices();
-      const googleMale = voices.find(v => v.name.includes("Google 한국의 남성"));
-      if (googleMale) utter.voice = googleMale;
+      if (preferredVoice) {
+        utter.voice = preferredVoice;
+      }
 
       animateMouth(true);
       utter.onend = () => animateMouth(false);
@@ -131,9 +148,13 @@
       };
     }
 
-    // 강제 음성 초기화 (크롬 초기화 대응)
+    // 음성 목록 로딩 후 남성 음성 설정
     window.speechSynthesis.onvoiceschanged = () => {
-      window.speechSynthesis.getVoices();
+      const voices = window.speechSynthesis.getVoices();
+      const maleVoiceCandidates = voices.filter(v =>
+        v.lang === "ko-KR" && (v.name.includes("남성") || v.name.toLowerCase().includes("male") || v.name.includes("Wavenet-C") || v.name.includes("B") || v.name.includes("Google") || v.name.includes("Microsoft") )
+      );
+      preferredVoice = maleVoiceCandidates.find(v => v.name.includes("Google 한국의 남성")) || maleVoiceCandidates[0];
     };
   </script>
 </body>
