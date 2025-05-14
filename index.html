@@ -12,73 +12,52 @@
       font-family: sans-serif;
       text-align: center;
       background: #f2f2f2;
-      overflow: auto;
     }
     body {
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
     }
-    .character {
-      max-width: 90vw;
-      flex-shrink: 0;
-    }
     .character img {
-      width: auto;
-      height: auto;
       max-width: 90vw;
-      max-height: 50vh;
+      max-height: 45vh;
+      height: auto;
+      width: auto;
       object-fit: contain;
       display: block;
-      margin: 0 auto;
+      margin: 1rem auto 0.5rem;
     }
     .bubble {
-      position: relative;
       background: white;
       padding: 1rem 1.5rem;
       border-radius: 20px;
       border: 2px solid #888;
-      margin-top: 1rem;
+      margin: 0.5rem auto;
       width: 80vw;
       max-width: 320px;
       font-size: 1rem;
       box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
     }
     button, input[type="text"] {
-      margin-top: 1rem;
       font-size: 1rem;
       padding: 0.8rem;
+      margin: 0.5rem auto;
       width: 80%;
       max-width: 400px;
+      display: block;
     }
     input[type="text"] {
       margin-bottom: 0.5rem;
-    }
-    @media (max-width: 600px) {
-      .bubble {
-        font-size: 0.95rem;
-      }
-      button, input[type="text"] {
-        font-size: 0.95rem;
-        padding: 0.6rem;
-      }
     }
   </style>
 </head>
 <body>
   <h1>최태원 회장님 음성 챗봇</h1>
   <div class="character">
-  <img id="face" src="mouth_closed.png" alt="회장님 캐릭터">
-</div>
-<div class="bubble" id="bubble">무엇이든 질문해보세요!</div>
+    <img id="face" src="mouth_closed.png" alt="회장님 캐릭터">
   </div>
-  </div>
-  <br>
-  <div style="margin-top: 1rem;">
-    <input type="text" id="textInput" placeholder="채팅으로 질문해보세요" style="display: block; margin: 0 auto 1rem auto;">
-  </div>
-
+  <div class="bubble" id="bubble">무엇이든 질문해보세요!</div>
+  <input type="text" id="textInput" placeholder="채팅으로 질문해보세요">
   <button onclick="handleTextInput()">💬 질문하기</button>
   <button onclick="startListening()">🎤 음성으로 질문하기</button>
 
@@ -111,23 +90,55 @@
     }
 
     function getAnswer(transcript) {
-      transcript = transcript.trim().replace(/\s/g, "");
+      const normalized = transcript.trim().replace(/\s/g, "");
       for (const key in qaMap) {
-        if (transcript.includes(key.replace(/\s/g, ""))) {
+        const keyword = key.replace(/\s/g, "");
+        if (normalized.includes(keyword) || keyword.includes(normalized)) {
           return qaMap[key];
         }
       }
-      return "죄송합니다. 그 질문은 잘 모르겠습니다.";
+      return null;
+    }
+
+    async function getGPTAnswer(prompt) {
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer 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"
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo-1106",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7
+          })
+        });
+
+        if (!response.ok) {
+          console.error("❌ GPT 요청 실패:", response.status, response.statusText);
+          return `GPT 요청 실패 (상태 코드: ${response.status})`;
+        }
+
+        const data = await response.json();
+        console.log("🔍 GPT 응답:", data);
+
+        if (!data.choices || !data.choices[0]?.message?.content) {
+          return "GPT 응답 형식이 예상과 달라졌어요.";
+        }
+
+        return data.choices[0].message.content.trim();
+      } catch (err) {
+        console.error("🚨 GPT 네트워크 오류:", err);
+        return "GPT 네트워크 오류가 발생했어요.";
+      }
     }
 
     function speak(text) {
       bubble.innerText = text;
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = "ko-KR";
-
-      if (preferredVoice) {
-        utter.voice = preferredVoice;
-      }
+      if (preferredVoice) utter.voice = preferredVoice;
 
       animateMouth(true);
       utter.onend = () => animateMouth(false);
@@ -135,36 +146,17 @@
     }
 
     async function handleTextInput() {
-  const input = textInput.value.trim();
-  if (!input) return;
+      const input = textInput.value.trim();
+      if (!input) return;
 
-  bubble.innerText = "생각 중이에요... 🤔";
-
-  let answer = getAnswer(input);
-  if (answer === "죄송합니다. 그 질문은 잘 모르겠습니다.") {
-    try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer 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"
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: [{ role: "user", content: input }],
-          temperature: 0.7
-        })
-      });
-      const data = await response.json();
-      answer = data.choices?.[0]?.message?.content?.trim() || "답변을 생성하는 데 문제가 발생했어요.";
-    } catch (err) {
-      answer = "GPT 응답 중 오류가 발생했어요.";
+      bubble.innerText = "생각 중이에요... 🤔";
+      let answer = getAnswer(input);
+      if (!answer) {
+        answer = await getGPTAnswer(input);
+      }
+      speak(answer);
+      textInput.value = "";
     }
-  }
-
-  speak(answer);
-  textInput.value = "";
-}
 
     function startListening() {
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -175,9 +167,9 @@
       bubble.innerText = "듣고 있어요... 🎧";
       recognition.start();
 
-      recognition.onresult = function(event) {
-        const results = event.results;
+      recognition.onresult = async function(event) {
         let transcript = "";
+        const results = event.results;
         for (let i = results.length - 1; i >= 0; i--) {
           if (results[i].isFinal) {
             transcript = results[i][0].transcript;
@@ -187,40 +179,48 @@
         if (!transcript && results[0]) {
           transcript = results[0][0].transcript;
         }
+
         transcript = transcript.trim();
-        const answer = getAnswer(transcript);
+        let answer = getAnswer(transcript);
+        if (!answer) {
+          bubble.innerText = "GPT에게 물어보는 중이에요...";
+          answer = await getGPTAnswer(transcript);
+        }
+
         speak(answer);
       };
 
-      recognition.onerror = function(event) {
+      recognition.onerror = () => {
         bubble.innerText = "음성 인식 오류가 발생했어요.";
       };
     }
 
-    window.speechSynthesis.onvoiceschanged = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const maleVoiceCandidates = voices.filter(v =>
-        v.lang === "ko-KR" && (v.name.includes("남성") || v.name.toLowerCase().includes("male") || v.name.includes("Wavenet-C") || v.name.includes("B") || v.name.includes("Google") || v.name.includes("Microsoft") )
-      );
-      preferredVoice = maleVoiceCandidates.find(v => v.name.includes("Google 한국의 남성")) || maleVoiceCandidates[0];
-    };
-      // 스페이스바 누르고 있는 동안 음성 인식 활성화
-    let recognitionInstance = null;
-    document.body.addEventListener('keydown', (e) => {
-  if (e.code === 'Space') {
-    e.preventDefault();
-    startListening();
-  }
-});
+    // 스페이스 키로 음성인식
+    document.body.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        startListening();
+      }
+    });
 
-    
-
-    // 엔터키로 텍스트 입력 실행
-    textInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
+    // 엔터 키로 텍스트 질문
+    textInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
         handleTextInput();
       }
     });
+
+    // 남성 음성 고정
+    window.speechSynthesis.onvoiceschanged = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const maleVoice = voices.find(v =>
+        v.lang === "ko-KR" &&
+        (v.name.includes("Google 한국의 남성") ||
+         v.name.includes("남성") ||
+         v.name.toLowerCase().includes("male"))
+      );
+      preferredVoice = maleVoice || voices.find(v => v.lang === "ko-KR");
+    };
   </script>
 </body>
 </html>
