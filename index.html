@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Groq AI 챗봇</title>
+  <title>Groq AI 대화형 챗봇</title>
   <style>
     html, body {
       margin: 0;
@@ -40,7 +40,7 @@
   </style>
 </head>
 <body>
-  <h1>Groq AI 챗봇</h1>
+  <h1>Groq AI 대화형 챗봇</h1>
   <div class="character">
     <img id="face" src="mouth_closed.png" alt="캐릭터 이미지">
   </div>
@@ -57,6 +57,9 @@
     const openMouth = "mouth_open.png";
     let speakingInterval = null;
     let preferredVoice = null;
+
+    // 🧠 대화형 메시지 히스토리 저장
+    const conversationHistory = [];
 
     function animateMouth(open = true) {
       if (open) {
@@ -86,11 +89,12 @@
         return "질문 내용을 입력해주세요.";
       }
 
-      const cleanPrompt = prompt.trim();
+      const userMessage = { role: "user", content: "다음 질문에 한국어로 답해줘: " + prompt.trim() };
+      conversationHistory.push(userMessage);
 
       const bodyData = {
         model: "llama3-8b-8192",
-        messages: [{ role: "user", content: cleanPrompt }],
+        messages: conversationHistory,
         temperature: 0.7,
         top_p: 1,
         stream: false
@@ -116,7 +120,9 @@
           return `GPT 요청 실패 (상태 코드: ${response.status})`;
         }
 
-        return data.choices?.[0]?.message?.content?.trim() || "AI 응답 생성 실패";
+        const reply = data.choices?.[0]?.message?.content?.trim() || "AI 응답 생성 실패";
+        conversationHistory.push({ role: "assistant", content: reply }); // 응답 저장
+        return reply;
 
       } catch (err) {
         console.error("🚨 네트워크 오류:", err);
@@ -155,12 +161,7 @@
       };
     }
 
-    document.body.addEventListener("keydown", (e) => {
-      if (e.code === "Space") {
-        e.preventDefault();
-        startListening();
-      }
-    });
+    // ❌ 스페이스 음성인식 비활성화 (삭제됨)
 
     textInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
@@ -170,6 +171,7 @@
 
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = window.speechSynthesis.getVoices();
+      // 남성 목소리 우선 검색
       const maleVoice = voices.find(v =>
         v.lang === "ko-KR" &&
         (v.name.includes("Google 한국의 남성") || v.name.toLowerCase().includes("male"))
