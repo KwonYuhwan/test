@@ -82,6 +82,10 @@
     }
 
     async function getAIAnswer(prompt) {
+      if (!prompt || prompt.trim().length === 0) {
+        return "질문 내용을 입력해주세요.";
+      }
+
       try {
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
@@ -115,7 +119,10 @@
 
     async function handleTextInput() {
       const input = textInput.value.trim();
-      if (!input) return;
+      if (!input) {
+        bubble.innerText = "질문을 입력해주세요!";
+        return;
+      }
       bubble.innerText = "AI가 생각 중이에요... 🤔";
       const answer = await getAIAnswer(input);
       speak(answer);
