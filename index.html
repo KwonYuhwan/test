@@ -2,96 +2,139 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>룰렛 게임</title>
+  <title>최태원 회장님 챗봇</title>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
-      margin-top: 50px;
+      background: #f2f2f2;
+      padding: 3rem;
     }
-    #wheel {
-      width: 300px;
-      height: 300px;
-      border-radius: 50%;
-      border: 10px solid #333;
+    .character {
       position: relative;
-      margin: 0 auto;
-      overflow: hidden;
-      transform: rotate(0deg);
-      transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+      display: inline-block;
     }
-    .segment {
+    .bubble {
       position: absolute;
-      width: 50%;
-      height: 50%;
-      top: 50%;
+      top: -130px;
       left: 50%;
-      transform-origin: 0% 0%;
-      border: 1px solid #999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #000;
-      font-weight: bold;
+      transform: translateX(-50%);
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 20px;
+      border: 2px solid #888;
+      width: 300px;
+      font-size: 1.1rem;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
     }
-    #pointer {
-      width: 0;
-      height: 0;
-      border-left: 20px solid transparent;
-      border-right: 20px solid transparent;
-      border-bottom: 30px solid red;
-      margin: 0 auto 20px;
+    .character img {
+      width: 250px;
+      height: auto;
+      transition: 0.2s;
     }
     button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
+      margin-top: 2rem;
+      font-size: 1.2rem;
+      padding: 1rem 2rem;
       cursor: pointer;
-    }
-    #result {
-      margin-top: 30px;
-      font-size: 20px;
-      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div id="pointer"></div>
-  <div id="wheel">
-    <div class="segment" style="transform: rotate(0deg) translateX(-100%); background: #ffcccb;">음료 무료 증정</div>
-    <div class="segment" style="transform: rotate(120deg) translateX(-100%); background: #d3d3d3;">SK스토아 적립금</div>
-    <div class="segment" style="transform: rotate(240deg) translateX(-100%); background: #c1e1c1;">꽝</div>
+  <h1>최태원 회장님 음성 챗봇</h1>
+  <div class="character">
+    <div class="bubble" id="bubble">무엇이든 질문해보세요!</div>
+    <img id="face" src="mouth_closed.png" alt="회장님 캐릭터">
   </div>
-  <button onclick="spinWheel()">돌리기</button>
-  <div id="result"></div>
+  <br>
+  <button onclick="startListening()">🎤 질문하기</button>
 
   <script>
-    let wheel = document.getElementById("wheel");
-    let result = document.getElementById("result");
-    let spinning = false;
+    const qaMap = {
+      "조미화": "조미화 매니저님은 1991년생 양띠로, 전 워크샵 준비위원회 위원이었고 현재는 포상준비위원회에서 활약 중이에요. 아버님은 나무를 가꾸시고, 아기 등원을 위하여 회사 근처로 이사오신 분이에요.",
+      "백승효": "백승효 팀장님은 양띠로, 모바일제휴영업팀의 수장이자 대형 커피 프랜차이즈의 사모님으로도 알려져 있어요. 정치색은 밝히지 않지만, 사적인 이야기에는 꽤 솔직하게 말씀하시는 스타일이에요.",
+      "스토아": "SK스토아는 SK그룹 계열의 T커머스 전문 기업으로, TV뿐 아니라 모바일과 온라인 플랫폼에서 쇼핑 서비스를 제공하는 종합 미디어커머스 회사예요. 2017년에 설립되어 2018년부터 방송을 시작했고, 다양한 채널과 앱을 통해 서비스하며 수평적이고 자율적인 문화를 가지고 있어요. 복지도 우수하고, 다양한 팀이 협력해 운영되고 있으며, 고객 중심과 지속 가능한 가치를 핵심 철학으로 삼고 있어요."
+    };
 
-    const segments = [
-      { label: "음료 무료 증정", angle: 0 },
-      { label: "SK스토아 적립금", angle: 120 },
-      { label: "꽝", angle: 240 }
-    ];
+    const bubble = document.getElementById("bubble");
+    const face = document.getElementById("face");
+    const closedMouth = "mouth_closed.png";
+    const openMouth = "mouth_open.png";
+    let speakingInterval = null;
+    let preferredVoice = null;
 
-    function spinWheel() {
-      if (spinning) return;
-      spinning = true;
-      result.textContent = "";
-
-      const randIndex = Math.floor(Math.random() * segments.length);
-      const fullRotations = 5;
-      const finalAngle = fullRotations * 360 + segments[randIndex].angle;
-
-      wheel.style.transform = `rotate(${finalAngle}deg)`;
-
-      setTimeout(() => {
-        result.textContent = `🎉 결과: ${segments[randIndex].label}`;
-        spinning = false;
-      }, 4000);
+    function animateMouth(open = true) {
+      if (open) {
+        let toggle = false;
+        speakingInterval = setInterval(() => {
+          face.src = toggle ? openMouth : closedMouth;
+          toggle = !toggle;
+        }, 250);
+      } else {
+        clearInterval(speakingInterval);
+        face.src = closedMouth;
+      }
     }
+
+    function getAnswer(transcript) {
+      transcript = transcript.trim().replace(/\s/g, "");
+      for (const key in qaMap) {
+        if (transcript.includes(key.replace(/\s/g, ""))) {
+          return qaMap[key];
+        }
+      }
+      return "죄송합니다. 그 질문은 잘 모르겠습니다.";
+    }
+
+    function speak(text) {
+      bubble.innerText = text;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "ko-KR";
+
+      const voices = window.speechSynthesis.getVoices();
+      const googleMale = voices.find(v => v.name.includes("Google 한국의 남성"));
+      if (googleMale) utter.voice = googleMale;
+
+      animateMouth(true);
+      utter.onend = () => animateMouth(false);
+      window.speechSynthesis.speak(utter);
+    }
+
+    function startListening() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "ko-KR";
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 3;
+
+      bubble.innerText = "듣고 있어요... 🎧";
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const results = event.results;
+        let transcript = "";
+        for (let i = results.length - 1; i >= 0; i--) {
+          if (results[i].isFinal) {
+            transcript = results[i][0].transcript;
+            break;
+          }
+        }
+        if (!transcript && results[0]) {
+          transcript = results[0][0].transcript;
+        }
+        transcript = transcript.trim();
+        const answer = getAnswer(transcript);
+        speak(answer);
+      };
+
+      recognition.onerror = function(event) {
+        bubble.innerText = "음성 인식 오류가 발생했어요.";
+      };
+    }
+
+    // 강제 음성 초기화 (크롬 초기화 대응)
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.getVoices();
+    };
   </script>
 </body>
 </html>
