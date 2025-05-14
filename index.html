@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>최태원 회장님 챗봇</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Groq AI 챗봇 (프론트엔드 테스트)</title>
   <style>
     html, body {
-      height: 100%;
       margin: 0;
       padding: 0;
       font-family: sans-serif;
       text-align: center;
       background: #f2f2f2;
+      height: 100%;
     }
     body {
       display: flex;
@@ -21,10 +21,7 @@
     .character img {
       max-width: 90vw;
       max-height: 45vh;
-      height: auto;
-      width: auto;
       object-fit: contain;
-      display: block;
       margin: 1rem auto 0.5rem;
     }
     .bubble {
@@ -46,28 +43,19 @@
       max-width: 400px;
       display: block;
     }
-    input[type="text"] {
-      margin-bottom: 0.5rem;
-    }
   </style>
 </head>
 <body>
-  <h1>최태원 회장님 음성 챗봇</h1>
+  <h1>Groq AI 챗봇</h1>
   <div class="character">
-    <img id="face" src="mouth_closed.png" alt="회장님 캐릭터">
+    <img id="face" src="mouth_closed.png" alt="캐릭터 이미지" />
   </div>
   <div class="bubble" id="bubble">무엇이든 질문해보세요!</div>
-  <input type="text" id="textInput" placeholder="채팅으로 질문해보세요">
+  <input type="text" id="textInput" placeholder="채팅으로 질문해보세요" />
   <button onclick="handleTextInput()">💬 질문하기</button>
   <button onclick="startListening()">🎤 음성으로 질문하기</button>
 
   <script>
-    const qaMap = {
-      "조미화": "조미화 매니저님은 1991년생 양띠로, 전 워크샵 준비위원회 위원이었고 현재는 포상준비위원회에서 활약 중이에요. 아버님은 나무를 가꾸시고, 아기 등원을 위하여 회사 근처로 이사오신 분이에요.",
-      "백승효": "백승효 팀장님은 양띠로, 모바일제휴영업팀의 수장이자 대형 커피 프랜차이즈의 사모님으로도 알려져 있어요. 정치색은 밝히지 않지만, 사적인 이야기에는 꽤 솔직하게 말씀하시는 스타일이에요.",
-      "스토아": "스토아는 SK그룹 계열의 T커머스 전문 기업으로, TV뿐 아니라 모바일과 온라인 플랫폼에서 쇼핑 서비스를 제공하는 종합 미디어커머스 회사예요. 2017년에 설립되어 2018년부터 방송을 시작했고, 다양한 채널과 앱을 통해 서비스하며 수평적이고 자율적인 문화를 가지고 있어요. 복지도 우수하고, 다양한 팀이 협력해 운영되고 있으며, 고객 중심과 지속 가능한 가치를 핵심 철학으로 삼고 있어요."
-    };
-
     const bubble = document.getElementById("bubble");
     const face = document.getElementById("face");
     const textInput = document.getElementById("textInput");
@@ -89,71 +77,43 @@
       }
     }
 
-    function getAnswer(transcript) {
-      const normalized = transcript.trim().replace(/\s/g, "");
-      for (const key in qaMap) {
-        const keyword = key.replace(/\s/g, "");
-        if (normalized.includes(keyword) || keyword.includes(normalized)) {
-          return qaMap[key];
-        }
-      }
-      return null;
-    }
-
-    async function getGPTAnswer(prompt) {
-      try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer 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"
-          },
-          body: JSON.stringify({
-            model: "gpt-3.5-turbo-1106",
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.7
-          })
-        });
-
-        if (!response.ok) {
-          console.error("❌ GPT 요청 실패:", response.status, response.statusText);
-          return `GPT 요청 실패 (상태 코드: ${response.status})`;
-        }
-
-        const data = await response.json();
-        console.log("🔍 GPT 응답:", data);
-
-        if (!data.choices || !data.choices[0]?.message?.content) {
-          return "GPT 응답 형식이 예상과 달라졌어요.";
-        }
-
-        return data.choices[0].message.content.trim();
-      } catch (err) {
-        console.error("🚨 GPT 네트워크 오류:", err);
-        return "GPT 네트워크 오류가 발생했어요.";
-      }
-    }
-
     function speak(text) {
       bubble.innerText = text;
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = "ko-KR";
       if (preferredVoice) utter.voice = preferredVoice;
-
       animateMouth(true);
       utter.onend = () => animateMouth(false);
       window.speechSynthesis.speak(utter);
     }
 
+    async function getAIAnswer(prompt) {
+      try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer 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"
+          },
+          body: JSON.stringify({
+            model: "mixtral-8x7b-32768",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7
+          })
+        });
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || "AI 응답 생성 실패";
+      } catch (err) {
+        console.error("Groq API 오류:", err);
+        return "Groq API 호출 중 오류가 발생했어요.";
+      }
+    }
+
     async function handleTextInput() {
       const input = textInput.value.trim();
       if (!input) return;
-
-      bubble.innerText = "생각 중이에요... 🤔";
-      let answer = getAnswer(input);
-      if (!answer) {
-        answer = await getGPTAnswer(input);
-      }
+      bubble.innerText = "AI가 생각 중이에요... 🤔";
+      const answer = await getAIAnswer(input);
       speak(answer);
       textInput.value = "";
     }
@@ -161,32 +121,15 @@
     function startListening() {
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.lang = "ko-KR";
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 3;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
       bubble.innerText = "듣고 있어요... 🎧";
       recognition.start();
 
-      recognition.onresult = async function(event) {
-        let transcript = "";
-        const results = event.results;
-        for (let i = results.length - 1; i >= 0; i--) {
-          if (results[i].isFinal) {
-            transcript = results[i][0].transcript;
-            break;
-          }
-        }
-        if (!transcript && results[0]) {
-          transcript = results[0][0].transcript;
-        }
-
-        transcript = transcript.trim();
-        let answer = getAnswer(transcript);
-        if (!answer) {
-          bubble.innerText = "GPT에게 물어보는 중이에요...";
-          answer = await getGPTAnswer(transcript);
-        }
-
+      recognition.onresult = async function (event) {
+        const transcript = event.results[0][0].transcript;
+        const answer = await getAIAnswer(transcript);
         speak(answer);
       };
 
@@ -195,7 +138,6 @@
       };
     }
 
-    // 스페이스 키로 음성인식
     document.body.addEventListener("keydown", (e) => {
       if (e.code === "Space") {
         e.preventDefault();
@@ -203,21 +145,17 @@
       }
     });
 
-    // 엔터 키로 텍스트 질문
     textInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
         handleTextInput();
       }
     });
 
-    // 남성 음성 고정
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = window.speechSynthesis.getVoices();
       const maleVoice = voices.find(v =>
         v.lang === "ko-KR" &&
-        (v.name.includes("Google 한국의 남성") ||
-         v.name.includes("남성") ||
-         v.name.toLowerCase().includes("male"))
+        (v.name.includes("Google 한국의 남성") || v.name.includes("남성") || v.name.toLowerCase().includes("male"))
       );
       preferredVoice = maleVoice || voices.find(v => v.lang === "ko-KR");
     };
