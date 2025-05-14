@@ -41,8 +41,19 @@
         padding: 1.5rem;
       }
       .bubble {
-        font-size: 0.95rem;
-      }
+      position: relative;
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 20px;
+      border: 2px solid #888;
+      margin-top: 1rem;
+      width: 80vw;
+      max-width: 320px;
+      font-size: 1rem;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+      margin-left: auto;
+      margin-right: auto;
+    }
       button, input[type="text"] {
         font-size: 1rem;
         padding: 0.75rem;
@@ -53,7 +64,9 @@
 <body>
   <h1>최태원 회장님 음성 챗봇</h1>
   <div class="character">
+    <img id="face" src="mouth_closed.png" alt="회장님 캐릭터">
     <div class="bubble" id="bubble">무엇이든 질문해보세요!</div>
+  </div>
     <img id="face" src="mouth_closed.png" alt="회장님 캐릭터">
   </div>
   <br>
