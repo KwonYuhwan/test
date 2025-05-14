@@ -22,7 +22,7 @@
       margin-bottom: 1rem;$2}
     .character img {
       width: 100%;
-      max-width: 350px;
+      max-width: 100vw;
       height: auto;
       transition: 0.2s;
       display: block;
@@ -66,11 +66,10 @@
 <body>
   <h1>최태원 회장님 음성 챗봇</h1>
   <div class="character">
-  
+  <img id="face" src="mouth_closed.png" alt="회장님 캐릭터">
 </div>
 <div class="bubble" id="bubble">무엇이든 질문해보세요!</div>
   </div>
-    <img id="face" src="mouth_closed.png" alt="회장님 캐릭터">
   </div>
   <br>
   <div style="margin-top: 1rem;">
@@ -181,43 +180,13 @@
       // 스페이스바 누르고 있는 동안 음성 인식 활성화
     let recognitionInstance = null;
     document.body.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && !recognitionInstance) {
-        recognitionInstance = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognitionInstance.lang = 'ko-KR';
-        recognitionInstance.interimResults = true;
-        recognitionInstance.maxAlternatives = 3;
-        bubble.innerText = "듣고 있어요... 🎧";
-        recognitionInstance.start();
+  if (e.code === 'Space') {
+    e.preventDefault();
+    startListening();
+  }
+});
 
-        recognitionInstance.onresult = function(event) {
-          let transcript = '';
-          const results = event.results;
-          for (let i = results.length - 1; i >= 0; i--) {
-            if (results[i].isFinal) {
-              transcript = results[i][0].transcript;
-              break;
-            }
-          }
-          if (!transcript && results[0]) {
-            transcript = results[0][0].transcript;
-          }
-          transcript = transcript.trim();
-          const answer = getAnswer(transcript);
-          speak(answer);
-        };
-
-        recognitionInstance.onerror = function() {
-          bubble.innerText = "음성 인식 오류가 발생했어요.";
-        };
-      }
-    });
-
-    document.body.addEventListener('keyup', (e) => {
-      if (e.code === 'Space' && recognitionInstance) {
-        recognitionInstance.stop();
-        recognitionInstance = null;
-      }
-    });
+    
 
     // 엔터키로 텍스트 입력 실행
     textInput.addEventListener('keypress', (e) => {
