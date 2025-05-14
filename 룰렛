@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>룰렛 게임</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    #wheel {
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      border: 10px solid #333;
+      position: relative;
+      margin: 0 auto;
+      overflow: hidden;
+      transform: rotate(0deg);
+      transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+    }
+    .segment {
+      position: absolute;
+      width: 50%;
+      height: 50%;
+      top: 50%;
+      left: 50%;
+      transform-origin: 0% 0%;
+      border: 1px solid #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-weight: bold;
+    }
+    #pointer {
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 30px solid red;
+      margin: 0 auto 20px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 30px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="pointer"></div>
+  <div id="wheel">
+    <div class="segment" style="transform: rotate(0deg) translateX(-100%); background: #ffcccb;">음료 무료 증정</div>
+    <div class="segment" style="transform: rotate(120deg) translateX(-100%); background: #d3d3d3;">SK스토아 적립금</div>
+    <div class="segment" style="transform: rotate(240deg) translateX(-100%); background: #c1e1c1;">꽝</div>
+  </div>
+  <button onclick="spinWheel()">돌리기</button>
+  <div id="result"></div>
+
+  <script>
+    let wheel = document.getElementById("wheel");
+    let result = document.getElementById("result");
+    let spinning = false;
+
+    const segments = [
+      { label: "음료 무료 증정", angle: 0 },
+      { label: "SK스토아 적립금", angle: 120 },
+      { label: "꽝", angle: 240 }
+    ];
+
+    function spinWheel() {
+      if (spinning) return;
+      spinning = true;
+      result.textContent = "";
+
+      const randIndex = Math.floor(Math.random() * segments.length);
+      const fullRotations = 5;
+      const finalAngle = fullRotations * 360 + segments[randIndex].angle;
+
+      wheel.style.transform = `rotate(${finalAngle}deg)`;
+
+      setTimeout(() => {
+        result.textContent = `🎉 결과: ${segments[randIndex].label}`;
+        spinning = false;
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
