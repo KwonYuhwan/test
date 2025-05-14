@@ -3,33 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Groq AI 챗봇 (프론트엔드 테스트)</title>
+  <title>최태원 회장님 음성 챗봇</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       font-family: sans-serif;
-      text-align: center;
       background: #f2f2f2;
-      height: 100%;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      text-align: center;
     }
     .character img {
       max-width: 90vw;
       max-height: 45vh;
       object-fit: contain;
-      margin: 1rem auto 0.5rem;
+      margin-top: 1rem;
     }
     .bubble {
       background: white;
       padding: 1rem 1.5rem;
       border-radius: 20px;
       border: 2px solid #888;
-      margin: 0.5rem auto;
+      margin: 1rem auto;
       width: 80vw;
       max-width: 320px;
       font-size: 1rem;
@@ -46,12 +40,12 @@
   </style>
 </head>
 <body>
-  <h1>Groq AI 챗봇</h1>
+  <h1>최태원 회장님 음성 챗봇</h1>
   <div class="character">
-    <img id="face" src="mouth_closed.png" alt="캐릭터 이미지" />
+    <img id="face" src="mouth_closed.png" alt="회장님 캐릭터">
   </div>
   <div class="bubble" id="bubble">무엇이든 질문해보세요!</div>
-  <input type="text" id="textInput" placeholder="채팅으로 질문해보세요" />
+  <input type="text" id="textInput" placeholder="채팅으로 질문해보세요">
   <button onclick="handleTextInput()">💬 질문하기</button>
   <button onclick="startListening()">🎤 음성으로 질문하기</button>
 
@@ -101,10 +95,16 @@
             temperature: 0.7
           })
         });
+
+        if (!response.ok) {
+          console.error("❌ 요청 실패", response.status, response.statusText);
+          return `GPT 요청 실패 (상태 코드: ${response.status})`;
+        }
+
         const data = await response.json();
-        return data.choices?.[0]?.message?.content || "AI 응답 생성 실패";
+        return data.choices?.[0]?.message?.content?.trim() || "AI 응답 생성 실패";
       } catch (err) {
-        console.error("Groq API 오류:", err);
+        console.error("🚨 네트워크 오류:", err);
         return "Groq API 호출 중 오류가 발생했어요.";
       }
     }
@@ -122,7 +122,6 @@
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.lang = "ko-KR";
       recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
 
       bubble.innerText = "듣고 있어요... 🎧";
       recognition.start();
@@ -154,8 +153,7 @@
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = window.speechSynthesis.getVoices();
       const maleVoice = voices.find(v =>
-        v.lang === "ko-KR" &&
-        (v.name.includes("Google 한국의 남성") || v.name.includes("남성") || v.name.toLowerCase().includes("male"))
+        v.lang === "ko-KR" && (v.name.includes("Google 한국의 남성") || v.name.toLowerCase().includes("male"))
       );
       preferredVoice = maleVoice || voices.find(v => v.lang === "ko-KR");
     };
